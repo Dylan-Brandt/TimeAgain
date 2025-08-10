@@ -1,0 +1,163 @@
+body {
+  background-color: bisque;
+}
+
+.wrapper {
+  font-family: 'Courier New', Courier, monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 100%;
+}
+
+.header {
+  font-size: xx-large;
+  font-weight: bold;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .timer .timeDisplay, .timeControl {
+    min-width: 90%;
+  }
+
+  #stop, #cycle {
+    min-width: 45%;
+  }
+
+  #stopImg, #cycleImg {
+    max-width: 3rem;
+  }
+
+  #timerData {
+    min-width: 90%;
+  }
+}
+
+@media (min-width: 768px) {
+  .timer .timeDisplay, .timeControl {
+    min-width: 60%;
+  }
+
+#stop, #cycle {
+    min-width: 40%;
+  }
+
+  #stopImg, #cycleImg {
+    max-width: 6rem;
+  }
+
+  #timerData {
+    min-width: 60%;
+  }
+}
+
+.timer .timeDisplay {
+  background-color: white;
+  margin-bottom: 2rem;
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: 1px solid black;
+}
+
+.timer .timeDisplay .time {
+  font-size:5rem;
+  text-align:center;
+}
+
+.timer .timeDisplay .timerTitle {
+  font-size:1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}
+
+.timer .timeDisplay input {
+  font-size:1.5rem;
+  max-width: 50%;
+  min-width: 20%;
+  field-sizing: content;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.timer .timeDisplay .editIcon {
+  max-width:2rem; 
+  margin-left: 0.5rem;
+}
+
+.editIcon:hover {
+  cursor: pointer;
+}
+
+.timer .timeControl {
+  display:flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.timer .timeControl #stop {
+  background-color:tomato;
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid black;
+  user-select: none;
+}
+
+.timer .timeControl #cycle {
+  background-color:#c4ffc6;
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid black;
+  user-select: none;
+}
+
+#timerData {
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid black;
+  min-width: 20rem;
+  max-width: 30rem;
+}
+
+th, tfoot td {
+  background-color: #9e9e9e;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+tr:nth-child(odd) {
+  background-color: white;
+}

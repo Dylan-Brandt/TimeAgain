@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Double Timer</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+  <script src="./js/script.js"></script>
+</head>
+
+<body>
+  <div class="wrapper">
+    <header class="header">Timer</header>
+
+    <div class="timer">
+      <div class="timeDisplay">
+        <div id="timer0" class="timerTitle">
+          <label for="timer0input">1:&nbsp;</label>
+          <input id="timer0input" type="text" class="timerTitleInput" value="Timer 1" />
+        </div>
+        <hr>
+        <div id="timerCurrentTime0" class="time">
+          0.00s
+        </div>
+      </div>
+      <div class="timeDisplay">
+        <div id="timer1" class="timerTitle">
+          <label for="timer1input">2:&nbsp;</label>
+          <input id="timer1input" type="text" class="timerTitleInput" value="Timer 2" />
+        </div>
+        <hr>
+        <div id="timerCurrentTime1" class="time">
+          0.00s
+        </div>
+      </div>
+      <div class="timeControl">
+        <button type="button" id="stop" onclick="handleStopTimer()" disabled>
+          <img id="stopImg" src="./assets/svg/stop.svg" />
+        </button>
+        <button id="cycle" onclick="handleCycleTimer()">
+          <img id="cycleImg" src="./assets/svg/play.svg" />
+        </button>
+      </div>
+    </div>
+
+    <div id="timerData">
+    </div>
+  </div>
+</body>
+
+</html>
