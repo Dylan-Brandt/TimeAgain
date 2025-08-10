@@ -1,6 +1,5 @@
-
 const NUM_META_COLS = 2;
-var timerData = [];
+var timerData = [[]];
 
 var currentTime = 0;
 var currentTimer = 0;
@@ -10,19 +9,17 @@ var currentDataset = 0;
 var isCycleActive = false;
 var numTimers;
 
-// table row format: timerData<currentDataset>Row<currentTimer>
-
 window.onload = (() => {
   numTimers = document.getElementsByClassName("timeDisplay").length;
-})
+});
 
 setInterval(() => {
   currentTime += 0.01;
 
   if (isCycleActive) {
-    document.getElementById("timerCurrentTime" + currentTimer.toString()).textContent = (timerData.at(currentTimer).totalTime + currentTime).toFixed(2).toString() + "s";
+    document.getElementById("timerCurrentTime" + currentTimer.toString()).textContent = (timerData.at(currentSample).at(currentTimer).totalTime + currentTime).toFixed(2).toString() + "s";
   }
-}, 10)
+}, 10);
 
 function handleCycleTimer() {
   if (!isCycleActive) {
@@ -34,35 +31,50 @@ function handleCycleTimer() {
 }
 
 function initTimer() {
-  // initialize timer data
-  for (let i = 0; i < numTimers; i++) {
-    timerData.push({
-      data: [],
-      totalTime: 0
-    })
-  };
   currentTimer = 0;
   currentTime = 0;
+  currentInterval = 0;
   isCycleActive = true;
 
   // update display
   document.getElementById("cycleImg").setAttribute("src", "./assets/svg/cycle.svg");
   document.getElementById("cycle").style.backgroundColor = "#c4dfff";
-
-  initTable();
-
-  // enable stop button
   document.getElementById("stop").disabled = false;
+
+  initSampleData();
+  initTable();
+}
+
+function initSampleData() {
+  const sampleData = [];
+  for (let i = 0; i < numTimers; i++) {
+    sampleData.push({
+      data: [],
+      totalTime: 0
+    })
+  };
+
+  timerData[currentSample] = sampleData;
 }
 
 function initTable() {
+  const table = document.getElementById("tableData" + currentDataset.toString());
+
+  console.log(table);
+
+  if (!table) {
+    console.log("erer")
+    createTable();
+  }
+}
+
+function createTable() {
   const timerDataContainer = document.getElementById("timerData");
   const timerTitles = [...document.getElementsByClassName("timerTitle")];
-  const tables = [...timerDataContainer.getElementsByTagName("table")];
-  let table = tables.at(currentDataset);
 
   table = document.createElement("table");
-  table.setAttribute("id", "timerData" + currentDataset.toString());
+  table.setAttribute("id", "tableData" + currentDataset.toString());
+
   const tableHead = document.createElement("thead");
   const timeSampleHeader = document.createElement("th");
   timeSampleHeader.textContent = "Sample";
@@ -79,14 +91,13 @@ function initTable() {
 
   table.appendChild(tableHead);
   timerDataContainer.appendChild(table);
-
 }
 
 function updateCycleData() {
   updateCurrentTimerData();
 
-  // next timer
-  currentTimer = (currentTimer + 1) % timerData.length;
+  currentTimer = (currentTimer + 1) % numTimers;
+  currentInterval = (currentTimer == 0) ? currentInterval + 1 : currentInterval;
 }
 
 function updateCurrentTimerData() {
@@ -94,42 +105,43 @@ function updateCurrentTimerData() {
   currentTime = 0;
 
   // save time
-  timerData.at(currentTimer).data.push(cycleTime);
-  timerData.at(currentTimer).totalTime += cycleTime;
+  timerData.at(currentSample).at(currentTimer).data.push(cycleTime);
+  timerData.at(currentSample).at(currentTimer).totalTime += cycleTime;
 
   // update table
-  const tableId = "timerData" + currentDataset.toString();
-  const table = document.getElementById(tableId);
-  const numRows = table.getElementsByTagName("tr").length;
-  let tableRow = document.getElementById("Sample" + currentDataset.toString() + "Row" + (timerData.at(currentTimer).data.length - 1).toString());
+  const table = document.getElementById("tableData" + currentDataset.toString());
+  let tableRow = document.getElementById("Sample" + currentSample.toString() + "Row" + currentInterval.toString());
 
-  if (!tableRow) { // initialize new row for first timer
-    tableRow = document.createElement("tr");
-    tableRow.setAttribute("id", "Sample" + currentDataset.toString() + "Row" + numRows.toString());
-  }
-  if (tableRow.getElementsByTagName("td").length == 0) { // initialize sample/interval label row
-    const sampleColumn = document.createElement("td");
-    sampleColumn.textContent = (currentDataset + 1);
-    const intervalColumn = document.createElement("td");
-    intervalColumn.textContent = (numRows + 1);
-    tableRow.appendChild(sampleColumn);
-    tableRow.appendChild(intervalColumn);
+  if (!tableRow) { // initialize new row for first sample
+    tableRow = initRow();
   }
 
   const tableData = document.createElement("td");
-  tableData.setAttribute("id", tableId + "Col" + (currentTimer + NUM_META_COLS).toString());
+  tableData.setAttribute("id", "Sample" + currentSample.toString() + "Row" + currentInterval.toString() + "Col" + (currentTimer + NUM_META_COLS).toString());
   tableData.textContent = cycleTime.toFixed(2);
   tableRow.appendChild(tableData);
   table.appendChild(tableRow);
 }
 
+function initRow() {
+  let tableRow = document.createElement("tr");
+  tableRow.setAttribute("id", "Sample" + currentSample.toString() + "Row" + currentInterval.toString());
+  const sampleColumn = document.createElement("td");
+  sampleColumn.textContent = (currentSample + 1);
+  const intervalColumn = document.createElement("td");
+  intervalColumn.textContent = currentInterval + 1;
+  tableRow.appendChild(sampleColumn);
+  tableRow.appendChild(intervalColumn);
+
+  return tableRow;
+}
+
 function handleStopTimer() {
   updateCurrentTimerData();
 
-  const tableId = "timerData" + currentDataset.toString();
+  const tableId = "tableData" + currentDataset.toString();
   const table = document.getElementById(tableId);
-  const numRows = table.getElementsByTagName("tr").length;
-  const tableRow = document.getElementById("Sample" + currentDataset.toString() + "Row" + (timerData.at(currentTimer).data.length - 1).toString());
+  const tableRow = document.getElementById("Sample" + currentSample.toString() + "Row" + currentInterval.toString());
 
   // fill missing columns
   for (let i = currentTimer + 1; i < numTimers; i++) {
@@ -140,26 +152,25 @@ function handleStopTimer() {
   }
 
   // sum timer totals
-  const tableFoot = document.createElement("tr");
+  const totalTimeRow = document.createElement("tr");
 
   const intervalColumn = document.createElement("td");
   intervalColumn.textContent = "Totals";
   intervalColumn.style.fontWeight = "bold";
-  tableFoot.setAttribute("id", tableId + "Row" + numRows.toString());
-  tableFoot.appendChild(intervalColumn);
+  totalTimeRow.appendChild(intervalColumn);
 
   const sampleColumn = document.createElement("td");
   sampleColumn.textContent = "";
-  tableFoot.appendChild(sampleColumn);
+  totalTimeRow.appendChild(sampleColumn);
 
   for (let i = 0; i < numTimers; i++) {
     const tableData = document.createElement("td");
     tableData.setAttribute("id", tableId + "Col" + (i + NUM_META_COLS).toString());
-    tableData.textContent = timerData.at(i).totalTime.toFixed(2);
-    tableFoot.appendChild(tableData);
+    tableData.textContent = timerData.at(currentSample).at(i).totalTime.toFixed(2);
+    totalTimeRow.appendChild(tableData);
   }
 
-  table.appendChild(tableFoot);
+  table.appendChild(totalTimeRow);
 
   isCycleActive = false;
   // update display
@@ -172,35 +183,5 @@ function handleStopTimer() {
 
   // disable stop button
   document.getElementById("stop").disabled = true;
-  currentDataset += 1;
-  timerData = [];
-}
-
-function handleEditTimerTitle(e) {
-  const icon = e.target;
-  icon.style.visibility = "hidden";
-  const timerTitle = icon.parentElement;
-  console.log(timerTitle)
-  const input = [...timerTitle.getElementsByTagName("input")].at(0);
-  console.log([...timerTitle.getElementsByTagName("input")]);
-  input.style.visibility = "visible";
-  input.focus;
-}
-
-function handleSaveTimerTitle(e) {
-  const input = e.target;
-  const timerTitle = input.parentElement;
-
-  // Find and update only the text span
-  const titleText = timerTitle.querySelector(".title-text");
-  if (titleText) {
-    titleText.textContent = input.value;
-  }
-
-  input.style.visibility = "hidden";
-
-  const icon = timerTitle.querySelector("img");
-  if (icon) {
-    icon.style.visibility = "visible";
-  }
+  currentSample += 1;
 }
