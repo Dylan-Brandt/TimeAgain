@@ -150,8 +150,10 @@ th, tfoot td {
 }
 
 th, td {
+  min-width: 20%;
   text-align: left;
   padding: 8px;
+  font-size: large;
 }
 
 tr:nth-child(even) {
@@ -160,4 +162,19 @@ tr:nth-child(even) {
 
 tr:nth-child(odd) {
   background-color: white;
+}
+
+.copyButtonContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50%;
+  margin-bottom: 2rem;
+}
+
+.copyButtonContainer button {
+  padding: 1rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: x-large;
+  font-weight: bold;
 }

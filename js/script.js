@@ -26,7 +26,7 @@ function handleCycleTimer() {
     initTimer();
   }
   else {
-    updateCycleData();
+    cycleTimers();
   }
 }
 
@@ -42,7 +42,6 @@ function initTimer() {
   document.getElementById("stop").disabled = false;
 
   initSampleData();
-  initTable();
 }
 
 function initSampleData() {
@@ -57,22 +56,14 @@ function initSampleData() {
   timerData[currentSample] = sampleData;
 }
 
-function initTable() {
-  const table = document.getElementById("tableData" + currentDataset.toString());
-
-  console.log(table);
-
-  if (!table) {
-    console.log("erer")
-    createTable();
-  }
-}
-
 function createTable() {
   const timerDataContainer = document.getElementById("timerData");
+  const tableContainer = document.createElement("div");
+  tableContainer.setAttribute("class", "tableContainer");
+
   const timerTitles = [...document.getElementsByClassName("timerTitle")];
 
-  table = document.createElement("table");
+  const table = document.createElement("table");
   table.setAttribute("id", "tableData" + currentDataset.toString());
 
   const tableHead = document.createElement("thead");
@@ -90,10 +81,14 @@ function createTable() {
   }
 
   table.appendChild(tableHead);
-  timerDataContainer.appendChild(table);
+  tableContainer.appendChild(table);
+  tableContainer.appendChild(createTableButtons());
+  timerDataContainer.appendChild(tableContainer);
+
+  return table;
 }
 
-function updateCycleData() {
+function cycleTimers() {
   updateCurrentTimerData();
 
   currentTimer = (currentTimer + 1) % numTimers;
@@ -109,9 +104,12 @@ function updateCurrentTimerData() {
   timerData.at(currentSample).at(currentTimer).totalTime += cycleTime;
 
   // update table
-  const table = document.getElementById("tableData" + currentDataset.toString());
-  let tableRow = document.getElementById("Sample" + currentSample.toString() + "Row" + currentInterval.toString());
+  let table = document.getElementById("tableData" + currentDataset.toString());
+  if (!table) {
+    table = createTable();
+  }
 
+  let tableRow = document.getElementById("Sample" + currentSample.toString() + "Row" + currentInterval.toString());
   if (!tableRow) { // initialize new row for first sample
     tableRow = initRow();
   }
@@ -153,12 +151,10 @@ function handleStopTimer() {
 
   // sum timer totals
   const totalTimeRow = document.createElement("tr");
-
   const intervalColumn = document.createElement("td");
   intervalColumn.textContent = "Totals";
   intervalColumn.style.fontWeight = "bold";
   totalTimeRow.appendChild(intervalColumn);
-
   const sampleColumn = document.createElement("td");
   sampleColumn.textContent = "";
   totalTimeRow.appendChild(sampleColumn);
@@ -172,16 +168,67 @@ function handleStopTimer() {
 
   table.appendChild(totalTimeRow);
 
-  isCycleActive = false;
   // update display
   document.getElementById("cycleImg").setAttribute("src", "./assets/svg/play.svg");
   document.getElementById("cycle").style.backgroundColor = "#c4ffc6";
-
+  document.getElementById("stop").disabled = true;
   for (let i = 0; i < numTimers; i++) {
     document.getElementById("timerCurrentTime" + i.toString()).textContent = "0.00s";
   }
 
-  // disable stop button
-  document.getElementById("stop").disabled = true;
   currentSample += 1;
+  isCycleActive = false;
+}
+
+function handleCopyTable(copyButtonEvent) {
+  console.log(copyButtonEvent.target)
+  console.log(copyButtonEvent.target.parentElement.parentElement)
+
+  const tableElement = [...copyButtonEvent.target.parentElement.parentElement.parentElement.getElementsByTagName("table")].at(0);
+  if (!tableElement) {
+    console.error('Table not found!');
+    return;
+  }
+
+  let plainTextData = '';
+  const rows = tableElement.querySelectorAll('tr');
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('th, td');
+    const rowData = Array.from(cells).map(cell => cell.innerText.trim()).join('\t');
+    plainTextData += rowData + '\n';
+  });
+
+  const htmlData = tableElement.outerHTML;
+
+  const plainTextBlob = new Blob([plainTextData], { type: 'text/plain' });
+  const htmlBlob = new Blob([htmlData], { type: 'text/html' });
+
+  const clipboardItem = new ClipboardItem({
+    'text/plain': plainTextBlob,
+    'text/html': htmlBlob
+  });
+
+  navigator.clipboard.write([clipboardItem])
+    .then(() => {
+      console.log('Table copied to clipboard successfully!');
+    })
+    .catch(err => {
+      console.error('Failed to copy table:', err);
+    });
+}
+
+function createTableButtons() {
+  const buttonContainer = document.createElement("div");
+  buttonContainer.setAttribute("class", "copyButtonContainer");
+  const copyButton = document.createElement("button");
+  copyButton.addEventListener("click", (e) => handleCopyTable(e));
+  copyButton.innerText = "Copy data";
+  // const copyImg = document.createElement("img");
+  // copyImg.setAttribute("src", "./assets/svg/copy.svg");
+
+  // copyButton.appendChild(copyImg);
+  buttonContainer.appendChild(copyButton);
+
+  return buttonContainer;
 }
