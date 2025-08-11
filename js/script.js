@@ -80,7 +80,12 @@ function createTable() {
     tableHead.appendChild(timerHeader);
   }
 
+  const breaker = document.createElement("hr");
+  breaker.style.backgroundColor = "black";
+  breaker.style.minWidth = "60%";
+  breaker.style.margin = "2rem 0 0 0";
   table.appendChild(tableHead);
+  tableContainer.appendChild(breaker);
   tableContainer.appendChild(table);
   tableContainer.appendChild(createTableButtons());
   timerDataContainer.appendChild(tableContainer);
@@ -180,42 +185,70 @@ function handleStopTimer() {
   isCycleActive = false;
 }
 
-function handleCopyTable(copyButtonEvent) {
-  console.log(copyButtonEvent.target)
-  console.log(copyButtonEvent.target.parentElement.parentElement)
-
-  const tableElement = [...copyButtonEvent.target.parentElement.parentElement.parentElement.getElementsByTagName("table")].at(0);
+function handleCopyTable(e) {
+  const tableElement = [...e.target.parentElement.parentElement.parentElement.getElementsByTagName("table")].at(0);
   if (!tableElement) {
-    console.error('Table not found!');
+    console.error("Table not found!");
     return;
   }
 
-  let plainTextData = '';
-  const rows = tableElement.querySelectorAll('tr');
+  let plainTextData = "";
+  const rows = tableElement.querySelectorAll("tr");
 
   rows.forEach(row => {
-    const cells = row.querySelectorAll('th, td');
-    const rowData = Array.from(cells).map(cell => cell.innerText.trim()).join('\t');
-    plainTextData += rowData + '\n';
+    const cells = row.querySelectorAll("th, td");
+    const rowData = Array.from(cells).map(cell => cell.innerText.trim()).join("\t");
+    plainTextData += rowData + "\n";
   });
 
   const htmlData = tableElement.outerHTML;
 
-  const plainTextBlob = new Blob([plainTextData], { type: 'text/plain' });
-  const htmlBlob = new Blob([htmlData], { type: 'text/html' });
+  const plainTextBlob = new Blob([plainTextData], { type: "text/plain" });
+  const htmlBlob = new Blob([htmlData], { type: "text/html" });
 
   const clipboardItem = new ClipboardItem({
-    'text/plain': plainTextBlob,
-    'text/html': htmlBlob
+    "text/plain": plainTextBlob,
+    "text/html": htmlBlob
   });
 
   navigator.clipboard.write([clipboardItem])
     .then(() => {
-      console.log('Table copied to clipboard successfully!');
+      console.log("Table copied to clipboard successfully!");
     })
     .catch(err => {
-      console.error('Failed to copy table:', err);
+      console.error("Failed to copy table:", err);
     });
+}
+
+function handleDownloadTable(e) {
+  let csv = "";
+  const tableElement = [...e.target.parentElement.parentElement.parentElement.getElementsByTagName("table")].at(0);
+  const filename = tableElement.id + ".csv";
+
+  const rows = tableElement.querySelectorAll("thead, tr");
+  for (const row of rows) {
+    const cells = row.querySelectorAll("td, th");
+    const rowText = Array.from(cells).map(cell => cell.innerText);
+    const quotedRowText = rowText.map(text => {
+      return text;
+    });
+    console.log(quotedRowText.join(","));
+    csv += (quotedRowText.join(",") + "\n");
+  }
+
+  downloadCSV(filename, csv);
+}
+
+function downloadCSV(filename, text) {
+  const blob = new Blob([text], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function createTableButtons() {
@@ -224,11 +257,16 @@ function createTableButtons() {
   const copyButton = document.createElement("button");
   copyButton.addEventListener("click", (e) => handleCopyTable(e));
   copyButton.innerText = "Copy data";
+
+  const downloadButton = document.createElement("button");
+  downloadButton.addEventListener("click", (e) => handleDownloadTable(e));
+  downloadButton.innerText = "Download csv";
   // const copyImg = document.createElement("img");
   // copyImg.setAttribute("src", "./assets/svg/copy.svg");
 
   // copyButton.appendChild(copyImg);
   buttonContainer.appendChild(copyButton);
+  buttonContainer.appendChild(downloadButton);
 
   return buttonContainer;
 }
