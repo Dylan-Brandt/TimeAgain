@@ -43,30 +43,34 @@ body {
     min-width: 90%;
   }
 
-  .copyButtonContainer {
+  .buttonContainer {
     min-width: 90%;
   }
 }
 
 @media (min-width: 768px) {
-  .timer .timeDisplay, .timeControl {
+  .timer .timeDisplay {
     min-width: 60%;
   }
 
-#stop, #cycle {
+  .timeControl {
     min-width: 40%;
   }
 
+#stop, #cycle {
+    min-width: 12rem;
+  }
+
   #stopImg, #cycleImg {
-    max-width: 6rem;
+    max-width: 4rem;
   }
 
   #timerData {
     min-width: 60%;
   }
 
-  .copyButtonContainer {
-    min-width: 90%;
+  .buttonContainer {
+    min-width: 40%;
   }
 }
 
@@ -133,6 +137,11 @@ body {
   border-radius: 10px;
   border: 1px solid black;
   user-select: none;
+  max-width: 5rem;
+}
+
+.timeControl {
+  max-width: 10rem;
 }
 
 #timerData {
@@ -181,16 +190,17 @@ tr:nth-child(odd) {
   background-color: white;
 }
 
-.copyButtonContainer {
+.buttonContainer {
   display: flex;
   align-items: center;
   justify-content: space-around;
   margin-bottom: 2rem;
 }
 
-.copyButtonContainer button {
+.buttonContainer button {
   padding: 1rem;
   font-family: "Courier New", Courier, monospace;
   font-size: large;
   font-weight: bold;
+  width: 170px;
 }

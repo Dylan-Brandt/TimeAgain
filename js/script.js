@@ -253,7 +253,7 @@ function downloadCSV(filename, text) {
 
 function createTableButtons() {
   const buttonContainer = document.createElement("div");
-  buttonContainer.setAttribute("class", "copyButtonContainer");
+  buttonContainer.setAttribute("class", "buttonContainer");
   const copyButton = document.createElement("button");
   copyButton.addEventListener("click", (e) => handleCopyTable(e));
   copyButton.innerText = "Copy data";
