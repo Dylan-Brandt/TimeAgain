@@ -12,24 +12,19 @@ var accumulatedTime = 0; // To accumulate time for 10ms updates
 
 window.onload = (() => {
   numTimers = document.getElementsByClassName("timeDisplay").length;
-  startTimerUpdate(); // Start the timer update loop
+  startTimerUpdate();
 });
 
 function startTimerUpdate() {
   function updateTimer(timestamp) {
     if (!lastTime) lastTime = timestamp;
-    const delta = (timestamp - lastTime) / 1000; // Convert ms to seconds
+    const delta = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
-    accumulatedTime += delta;
 
-    // Update every 10ms (0.01s)
-    while (accumulatedTime >= 0.01) {
-      if (isCycleActive) {
-        currentTime += 0.01; // Increment by 0.01s, matching original setInterval
-        document.getElementById(`timerCurrentTime${currentTimer}`).textContent =
-          (timerData.at(currentSample).at(currentTimer).totalTime + currentTime).toFixed(2) + "s";
-      }
-      accumulatedTime -= 0.01; // Subtract 10ms from accumulated time
+    if (isCycleActive) {
+      currentTime += delta;
+      document.getElementById(`timerCurrentTime${currentTimer}`).textContent =
+        (timerData.at(currentSample).at(currentTimer).totalTime + currentTime).toFixed(2) + "s";
     }
 
     requestAnimationFrame(updateTimer); // Schedule the next frame
