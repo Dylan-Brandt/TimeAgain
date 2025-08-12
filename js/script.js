@@ -1,6 +1,5 @@
 const NUM_META_COLS = 2;
 var timerData = [[]];
-
 var currentTime = 0;
 var currentTimer = 0;
 var currentInterval = 0;
@@ -8,24 +7,41 @@ var currentSample = 0;
 var currentDataset = 0;
 var isCycleActive = false;
 var numTimers;
+var lastTime = null; // To track the last timestamp
+var accumulatedTime = 0; // To accumulate time for 10ms updates
 
 window.onload = (() => {
   numTimers = document.getElementsByClassName("timeDisplay").length;
+  startTimerUpdate(); // Start the timer update loop
 });
 
-setInterval(() => {
-  currentTime += 0.01;
+function startTimerUpdate() {
+  function updateTimer(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    const delta = (timestamp - lastTime) / 1000; // Convert ms to seconds
+    lastTime = timestamp;
+    accumulatedTime += delta;
 
-  if (isCycleActive) {
-    document.getElementById("timerCurrentTime" + currentTimer.toString()).textContent = (timerData.at(currentSample).at(currentTimer).totalTime + currentTime).toFixed(2).toString() + "s";
+    // Update every 10ms (0.01s)
+    while (accumulatedTime >= 0.01) {
+      if (isCycleActive) {
+        currentTime += 0.01; // Increment by 0.01s, matching original setInterval
+        document.getElementById(`timerCurrentTime${currentTimer}`).textContent =
+          (timerData.at(currentSample).at(currentTimer).totalTime + currentTime).toFixed(2) + "s";
+      }
+      accumulatedTime -= 0.01; // Subtract 10ms from accumulated time
+    }
+
+    requestAnimationFrame(updateTimer); // Schedule the next frame
   }
-}, 10);
+
+  requestAnimationFrame(updateTimer); // Start the animation loop
+}
 
 function handleCycleTimer() {
   if (!isCycleActive) {
     initTimer();
-  }
-  else {
+  } else {
     cycleTimers();
   }
 }
@@ -36,7 +52,7 @@ function initTimer() {
   currentInterval = 0;
   isCycleActive = true;
 
-  // update display
+  // Update display
   document.getElementById("cycleImg").setAttribute("src", "./assets/svg/cycle.svg");
   document.getElementById("cycle").style.backgroundColor = "#c4dfff";
   document.getElementById("stop").disabled = false;
@@ -50,10 +66,41 @@ function initSampleData() {
     sampleData.push({
       data: [],
       totalTime: 0
-    })
-  };
-
+    });
+  }
   timerData[currentSample] = sampleData;
+}
+
+function cycleTimers() {
+  updateCurrentTimerData();
+  currentTimer = (currentTimer + 1) % numTimers;
+  currentInterval = currentTimer === 0 ? currentInterval + 1 : currentInterval;
+}
+
+function updateCurrentTimerData() {
+  const cycleTime = currentTime;
+  currentTime = 0; // Reset currentTime for the next timer
+
+  // Save time
+  timerData.at(currentSample).at(currentTimer).data.push(cycleTime);
+  timerData.at(currentSample).at(currentTimer).totalTime += cycleTime;
+
+  // Update table
+  let table = document.getElementById("tableData" + currentDataset.toString());
+  if (!table) {
+    table = createTable();
+  }
+
+  let tableRow = document.getElementById("Sample" + currentSample.toString() + "Row" + currentInterval.toString());
+  if (!tableRow) {
+    tableRow = initRow();
+  }
+
+  const tableData = document.createElement("td");
+  tableData.setAttribute("id", "Sample" + currentSample.toString() + "Row" + currentInterval.toString() + "Col" + (currentTimer + NUM_META_COLS).toString());
+  tableData.textContent = cycleTime.toFixed(2);
+  tableRow.appendChild(tableData);
+  table.appendChild(tableRow);
 }
 
 function createTable() {
@@ -91,39 +138,6 @@ function createTable() {
   timerDataContainer.appendChild(tableContainer);
 
   return table;
-}
-
-function cycleTimers() {
-  updateCurrentTimerData();
-
-  currentTimer = (currentTimer + 1) % numTimers;
-  currentInterval = (currentTimer == 0) ? currentInterval + 1 : currentInterval;
-}
-
-function updateCurrentTimerData() {
-  const cycleTime = currentTime;
-  currentTime = 0;
-
-  // save time
-  timerData.at(currentSample).at(currentTimer).data.push(cycleTime);
-  timerData.at(currentSample).at(currentTimer).totalTime += cycleTime;
-
-  // update table
-  let table = document.getElementById("tableData" + currentDataset.toString());
-  if (!table) {
-    table = createTable();
-  }
-
-  let tableRow = document.getElementById("Sample" + currentSample.toString() + "Row" + currentInterval.toString());
-  if (!tableRow) { // initialize new row for first sample
-    tableRow = initRow();
-  }
-
-  const tableData = document.createElement("td");
-  tableData.setAttribute("id", "Sample" + currentSample.toString() + "Row" + currentInterval.toString() + "Col" + (currentTimer + NUM_META_COLS).toString());
-  tableData.textContent = cycleTime.toFixed(2);
-  tableRow.appendChild(tableData);
-  table.appendChild(tableRow);
 }
 
 function initRow() {
