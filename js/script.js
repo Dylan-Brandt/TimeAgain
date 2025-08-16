@@ -12,6 +12,7 @@ var accumulatedTime = 0; // To accumulate time for 10ms updates
 
 window.onload = (() => {
   numTimers = document.getElementsByClassName("timeDisplay").length;
+  loadState();
   startTimerUpdate();
 });
 
@@ -27,10 +28,10 @@ function startTimerUpdate() {
         (timerData.at(currentSample).at(currentTimer).totalTime + currentTime).toFixed(2) + "s";
     }
 
-    requestAnimationFrame(updateTimer); // Schedule the next frame
+    requestAnimationFrame(updateTimer);
   }
 
-  requestAnimationFrame(updateTimer); // Start the animation loop
+  requestAnimationFrame(updateTimer);
 }
 
 function handleCycleTimer() {
@@ -64,6 +65,7 @@ function initSampleData() {
     });
   }
   timerData[currentSample] = sampleData;
+  saveState();
 }
 
 function cycleTimers() {
@@ -96,6 +98,7 @@ function updateCurrentTimerData() {
   tableData.textContent = cycleTime.toFixed(2);
   tableRow.appendChild(tableData);
   table.appendChild(tableRow);
+  saveState();
 }
 
 function createTable() {
@@ -192,6 +195,7 @@ function handleStopTimer() {
 
   currentSample += 1;
   isCycleActive = false;
+  saveState();
 }
 
 function handleCopyTable(e) {
@@ -270,12 +274,90 @@ function createTableButtons() {
   const downloadButton = document.createElement("button");
   downloadButton.addEventListener("click", (e) => handleDownloadTable(e));
   downloadButton.innerText = "Download csv";
-  // const copyImg = document.createElement("img");
-  // copyImg.setAttribute("src", "./assets/svg/copy.svg");
 
-  // copyButton.appendChild(copyImg);
+  const clearButton = document.createElement("button");
+  clearButton.addEventListener("click", (e) => clearTable(e));
+  clearButton.innerText = "Clear";
+
   buttonContainer.appendChild(copyButton);
   buttonContainer.appendChild(downloadButton);
+  buttonContainer.appendChild(clearButton);
 
   return buttonContainer;
+}
+
+function saveState() {
+  const timerTitles = [...document.getElementsByClassName("timerTitleInput")].map(input => input.value);
+  const tableHtml = document.getElementById("timerData").innerHTML;
+  const state = {
+    timerData,
+    currentSample,
+    currentDataset,
+    timerTitles,
+    tableHtml
+  };
+  try {
+    localStorage.setItem("timerAppState", JSON.stringify(state));
+  } catch (err) {
+    console.error("Failed to save state:", err);
+  }
+}
+
+function loadState() {
+  const savedState = localStorage.getItem("timerAppState");
+  if (savedState) {
+    const state = JSON.parse(savedState);
+    timerData = state.timerData || [];
+    currentSample = state.currentSample || 0;
+    currentDataset = state.currentDataset || 0;
+    if (state.timerTitles) {
+      document.querySelectorAll(".timerTitleInput").forEach((input, i) => {
+        if (state.timerTitles[i]) input.value = state.timerTitles[i];
+      });
+    }
+    if (state.tableHtml && state.timerData.some(sample => sample.length > 0 && sample.some(timer => timer.data.length > 0))) {
+      const timerDataContainer = document.getElementById("timerData");
+      timerDataContainer.innerHTML = state.tableHtml;
+      reattachButtonListeners();
+    }
+  }
+}
+
+function reattachButtonListeners() {
+  const buttonContainers = document.querySelectorAll(".buttonContainer");
+  buttonContainers.forEach(container => {
+    const buttons = container.querySelectorAll("button");
+    buttons.forEach(button => {
+      if (button.textContent === "Copy data") {
+        button.removeEventListener("click", handleCopyTable);
+        button.addEventListener("click", handleCopyTable);
+      } else if (button.textContent === "Download csv") {
+        button.removeEventListener("click", handleDownloadTable);
+        button.addEventListener("click", handleDownloadTable);
+      } else if (button.textContent === "Clear") {
+        button.removeEventListener("click", clearTable);
+        button.addEventListener("click", clearTable);
+      }
+    });
+  });
+}
+
+function clearTable(e) {
+  const tableContainer = e.target.closest(".tableContainer");
+  const table = tableContainer.querySelector("table");
+  const tableId = table.id;
+  const sampleIndex = parseInt(tableId.replace("tableData", ""), 10);
+
+  timerData[sampleIndex] = null;
+  timerData = timerData.filter(sample => sample !== null);
+
+  if (sampleIndex < currentSample) {
+    currentSample = Math.max(0, currentSample - 1);
+  }
+  if (sampleIndex < currentDataset) {
+    currentDataset = Math.max(0, currentDataset - 1);
+  }
+  tableContainer.remove();
+
+  saveState();
 }
